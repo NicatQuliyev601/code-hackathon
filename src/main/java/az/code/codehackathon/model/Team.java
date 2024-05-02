@@ -1,4 +1,4 @@
-package az.code.codehackathon.model;qw
+package az.code.codehackathon.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
