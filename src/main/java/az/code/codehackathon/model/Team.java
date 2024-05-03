@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.Data;
 
 @Entity
@@ -15,11 +16,11 @@ public class Team {
     private Long id;
 
     private String name;
-    private double technicalStaffScore;
-    private double juryScore;
-    private double averageScore;
-    private int technicalStaffVoteCount;
-    private int juryVoteCount;
+    private Double technicalStaffScore;
+    private Double juryScore;
+    private Double averageScore;
+    private Integer technicalStaffVoteCount;
+    private Integer juryVoteCount;
 
 
     public Team(String name, double technicalStaffScore, double juryScore, int technicalStaffVoteCount, int juryVoteCount) {
