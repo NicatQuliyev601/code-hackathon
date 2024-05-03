@@ -1,4 +1,5 @@
 package az.code.codehackathon.controllor;
+
 import az.code.codehackathon.dto.request.JuryStaffRequest;
 import az.code.codehackathon.dto.request.TechnicalStaffRequest;
 import az.code.codehackathon.dto.response.JuryStaffResponse;
@@ -6,22 +7,20 @@ import az.code.codehackathon.dto.response.StudentResponse;
 import az.code.codehackathon.dto.response.TechnicalStaffResponse;
 import az.code.codehackathon.model.Team;
 import az.code.codehackathon.service.TeamService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/teams")
+@RequiredArgsConstructor
 public class TeamController {
 
     private final TeamService teamService;
-
-    @Autowired
-    public TeamController(TeamService teamService) {
-        this.teamService = teamService;
-    }
 
     @PostMapping
     public ResponseEntity<Team> createTeam(@RequestBody Team team) {

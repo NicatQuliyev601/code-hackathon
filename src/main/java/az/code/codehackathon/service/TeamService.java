@@ -1,11 +1,14 @@
 package az.code.codehackathon.service;
 
-
 import az.code.codehackathon.dto.request.JuryStaffRequest;
 import az.code.codehackathon.dto.request.TechnicalStaffRequest;
 import az.code.codehackathon.dto.response.JuryStaffResponse;
 import az.code.codehackathon.dto.response.StudentResponse;
 import az.code.codehackathon.dto.response.TechnicalStaffResponse;
+import az.code.codehackathon.exception.ErrorCodes;
+import az.code.codehackathon.exception.JuryStaffScoreException;
+import az.code.codehackathon.exception.TeamNotFoundException;
+import az.code.codehackathon.exception.TechnicalStaffScoreException;
 import az.code.codehackathon.model.Team;
 import az.code.codehackathon.repository.TeamRepository;
 import org.modelmapper.ModelMapper;
@@ -18,7 +21,6 @@ import java.util.stream.Collectors;
 public class TeamService {
 
     private final TeamRepository teamRepository;
-
     private final ModelMapper modelMapper;
 
     public TeamService(TeamRepository teamRepository, ModelMapper modelMapper) {
@@ -32,17 +34,47 @@ public class TeamService {
     }
 
     public Team updateTechnicalStaffScore(Long teamId, TechnicalStaffRequest request) {
-        Team team = teamRepository.findById(teamId).orElseThrow();
-        team.setTechnicalStaffVoteCount(team.getTechnicalStaffVoteCount());
-        team.setTechnicalStaffScore(request.getTechnicalStaffScore());
-        team.setAverageScore(calculateAverageScore(team.getTechnicalStaffScore(), team.getJuryScore()));
+        Team team = teamRepository.findById(teamId).orElseThrow(
+                () -> new TeamNotFoundException(ErrorCodes.TEAM_NOT_FOUND));
+
+        if (request.getTechnicalStaffScore() < 0 || request.getTechnicalStaffScore() > 100) {
+            throw new TechnicalStaffScoreException(ErrorCodes.TECHNICAL_STAFF_SCORE);
+        }
+
+        int newVoteCount = team.getTechnicalStaffVoteCount() != null ? team.getTechnicalStaffVoteCount() + 1 : 1;
+
+        double currentTechnicalStaffScore = team.getTechnicalStaffScore() != null ? team.getTechnicalStaffScore() * team.getTechnicalStaffVoteCount() : 0;
+        double newTechnicalStaffScore = (currentTechnicalStaffScore + request.getTechnicalStaffScore()) / newVoteCount;
+
+        team.setTechnicalStaffVoteCount(newVoteCount);
+        team.setTechnicalStaffScore(newTechnicalStaffScore);
+
+        Double juryScore = team.getJuryScore() != null ? team.getJuryScore() : 0.0;
+        team.setAverageScore(calculateAverageScore(newTechnicalStaffScore, juryScore));
+
         return teamRepository.save(team);
     }
 
     public Team updateJuryScore(Long teamId, JuryStaffRequest request) {
-        Team team = teamRepository.findById(teamId).orElseThrow();
-        team.setJuryScore(request.getJuryScore());
-        team.setAverageScore(calculateAverageScore(team.getTechnicalStaffScore(), team.getJuryScore()));
+        Team team = teamRepository.findById(teamId).orElseThrow(
+                () -> new TeamNotFoundException(ErrorCodes.TEAM_NOT_FOUND));
+
+        if (request.getJuryScore() < 0 || request.getJuryScore() > 5) {
+            throw new JuryStaffScoreException(ErrorCodes.JURY_STAFF_SCORE);
+        }
+
+        int newVoteCount = team.getJuryVoteCount() != null ? team.getJuryVoteCount() + 1 : 1;
+
+        double newJuryScore = (team.getJuryScore() != null ? team.getJuryScore() * team.getJuryVoteCount() : 0) + request.getJuryScore();
+        newJuryScore /= newVoteCount;
+
+        team.setJuryVoteCount(newVoteCount);
+        team.setJuryScore(newJuryScore);
+
+        Double technicalStaffScore = team.getTechnicalStaffScore() != null ? team.getTechnicalStaffScore() : 0.0;
+
+        team.setAverageScore(calculateAverageScore(technicalStaffScore, newJuryScore));
+
         return teamRepository.save(team);
     }
 
@@ -59,12 +91,18 @@ public class TeamService {
     }
 
     public List<StudentResponse> getAllScores() {
-        return teamRepository.findAll().stream()
-                .map(team -> new StudentResponse(team.getName(), team.getTechnicalStaffScore(), team.getJuryScore(), team.getAverageScore()))
+        return teamRepository
+                .findAll()
+                .stream()
+                .map(team -> modelMapper.map(team, StudentResponse.class))
                 .collect(Collectors.toList());
     }
 
-    private double calculateAverageScore(double technicalScore, double juryScore) {
-        return (technicalScore + juryScore) / 2;
+    public double calculateAverageScore(double technicalStaffScore, double juryScore) {
+        double normalizedJuryScore = juryScore * 20;
+
+        double sumOfScores = technicalStaffScore + normalizedJuryScore;
+
+        return sumOfScores / 2;
     }
 }
