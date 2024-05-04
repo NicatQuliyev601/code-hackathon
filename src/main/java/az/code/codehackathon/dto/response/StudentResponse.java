@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StudentResponse {
     private Long id;
+
+    private String imageUrl;
     private String name;
     private double technicalStaffScore;
     private double juryScore;
