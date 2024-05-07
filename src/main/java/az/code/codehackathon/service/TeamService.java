@@ -11,6 +11,7 @@ import az.code.codehackathon.exception.TeamNotFoundException;
 import az.code.codehackathon.exception.TechnicalStaffScoreException;
 import az.code.codehackathon.model.Team;
 import az.code.codehackathon.repository.TeamRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class TeamService {
 
     private final TeamRepository teamRepository;
@@ -30,6 +32,7 @@ public class TeamService {
 
     public Team createTeam(Team team) {
         team.setAverageScore(calculateAverageScore(team.getTechnicalStaffScore(), team.getJuryScore()));
+        log.info("create team service: " + team);
         return teamRepository.save(team);
     }
 
@@ -52,6 +55,7 @@ public class TeamService {
         Double juryScore = team.getJuryScore() != null ? team.getJuryScore() : 0.0;
         team.setAverageScore(calculateAverageScore(newTechnicalStaffScore, juryScore));
 
+        log.info("updateTechnicalStaffScore service: " + team);
         return teamRepository.save(team);
     }
 
@@ -75,22 +79,26 @@ public class TeamService {
 
         team.setAverageScore(calculateAverageScore(technicalStaffScore, newJuryScore));
 
+        log.info("updateJuryScore service: " + team);
         return teamRepository.save(team);
     }
 
     public List<TechnicalStaffResponse> getAllTechnicalScores() {
+        log.info("getAllTechnicalScores service: ");
         return teamRepository.findAll().stream()
                 .map(team -> modelMapper.map(team, TechnicalStaffResponse.class))
                 .collect(Collectors.toList());
     }
 
     public List<JuryStaffResponse> getAllJuryScores() {
+        log.info("getAllJuryScores service: ");
         return teamRepository.findAll().stream()
                 .map(team -> modelMapper.map(team, JuryStaffResponse.class))
                 .collect(Collectors.toList());
     }
 
     public List<StudentResponse> getAllScores() {
+        log.info("getAllScores service: ");
         return teamRepository
                 .findAll()
                 .stream()
