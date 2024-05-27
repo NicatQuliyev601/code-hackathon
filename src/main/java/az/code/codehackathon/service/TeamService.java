@@ -44,9 +44,15 @@ public class TeamService {
             throw new TechnicalStaffScoreException(ErrorCodes.TECHNICAL_STAFF_SCORE);
         }
 
-        int newVoteCount = team.getTechnicalStaffVoteCount() != null ? team.getTechnicalStaffVoteCount() + 1 : 1;
+        // Initialize technicalStaffVoteCount to 0 if null
+        Integer technicalStaffVoteCount = team.getTechnicalStaffVoteCount() != null ? team.getTechnicalStaffVoteCount() : 0;
 
-        double currentTechnicalStaffScore = team.getTechnicalStaffScore() != null ? team.getTechnicalStaffScore() * team.getTechnicalStaffVoteCount() : 0;
+        int newVoteCount = technicalStaffVoteCount + 1;
+
+        // Initialize technicalStaffScore to 0.0 if null
+        Double technicalStaffScore = team.getTechnicalStaffScore() != null ? team.getTechnicalStaffScore() : 0.0;
+
+        double currentTechnicalStaffScore = technicalStaffScore * technicalStaffVoteCount;
         double newTechnicalStaffScore = (currentTechnicalStaffScore + request.getTechnicalStaffScore()) / newVoteCount;
 
         team.setTechnicalStaffVoteCount(newVoteCount);
@@ -58,6 +64,7 @@ public class TeamService {
         log.info("updateTechnicalStaffScore service: " + team);
         return teamRepository.save(team);
     }
+
 
     public Team updateJuryScore(Long teamId, JuryStaffRequest request) {
         Team team = teamRepository.findById(teamId).orElseThrow(
